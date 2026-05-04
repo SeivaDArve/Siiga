@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App com Menu</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* botão menu */
+#menuBtn {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  font-size: 26px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+/* menu lateral */
+#sideMenu {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  background: #222;
+  color: white;
+  transition: 0.3s;
+  padding-top: 60px;
+}
+
+.menuItem {
+  padding: 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #444;
+}
+
+.menuItem:hover {
+  background: #333;
+}
+
+/* conteúdo principal */
+#content {
+  margin-left: 20px;
+  padding: 60px 20px;
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+input, button, cax {
+  padding: 10px;
+  margin-top: 10px;
+  width: 250px;
+  display: flex;
+  align-items: center;     /* centro vertical */
+  padding: 10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="menuBtn">☰</div>
+
+<!-- MENU -->
+<div id="sideMenu">
+  <div class="menuItem" onclick="openSection('home')">Home</div>
+  <div class="menuItem" onclick="openSection('upload')">Upload</div>
+  <div class="menuItem" onclick="openSection('gps')">GPS</div>
+  <div class="menuItem" onclick="openSection('testeS')">TesteServ</div>
+</div>
+
+<!-- CONTEÚDO -->
+<div id="content">
+
+  <!-- HOME -->
+  <div id="home" class="section active">
+    <h1>"Siigo" o crl</h1>
+    <h4>         Agora elé Siiga</h4>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="upload" class="section">
+    <h1>Upload e Pesquisa</h1>
+
+    <input type="text" id="searchInput" placeholder="Pesquisar...">
+    <button onclick="search()">Buscar</button>
+
+    <br><br>
+
+    <input type="file" id="imageInput">
+    <button onclick="uploadImage()">Upload imagem</button>
+  </div>
+
+  <!-- GPS -->
+  <div id="gps" class="section">
+    <h1>GPS</h1>
+    <button onclick="getGPS()">Obter localização</button>
+    <p id="gpsOutput"></p>
+  </div>
+
+  <!-- Teste Servidor -->
+  <div id="testeS" class="section">
+    <h1>Teste ao Servidor Remoto</h1>
+    <h4>se estiver offline, pode usar igualmente no Smartphone</h4>
+    <button onclick="testeS()">Testar Servidor</button>
+    <button onclick="f_change()">Alterar valor</button>
+    <p id="testeOutput"></p>
+    <div class="cax"> Campo  
+    <input id="one" type="text" value="Escreve aqui o crl..." readonly>
+    </div>
+  </div>
+</div>
+
+<script>
+let menu = document.getElementById("sideMenu");
+let open = false;
+
+/* abrir/fechar menu */
+document.getElementById("menuBtn").onclick = () => {
+  if (!open) {
+    menu.style.left = "0";
+  } else {
+    menu.style.left = "-250px";
+  }
+  open = !open;
+};
+
+/* trocar secções */
+function openSection(id) {
+  document.querySelectorAll(".section").forEach(sec => {
+    sec.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("active");
+
+  // fecha menu ao clicar
+  menu.style.left = "-250px";
+  open = false;
+}
+
+/* SEARCH */
+function search() {
+  const value = document.getElementById("searchInput").value;
+  alert("Pesquisaste: " + value);
+}
+
+/* UPLOAD */
+function uploadImage() {
+  const file = document.getElementById("imageInput").files[0];
+
+  if (!file) {
+    alert("Escolhe uma imagem");
+    return;
+  }
+
+  let formData = new FormData();
+  formData.append("image", file);
+
+  fetch("http://localhost:3000/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.text())
+  .then(data => alert("Upload: " + data))
+  .catch(err => console.log(err));
+}
+
+/* GPS */
+function getGPS() {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      document.getElementById("gpsOutput").innerHTML =
+        `Latitude: ${lat}<br>Longitude: ${lon}`;
+    },
+    () => alert("Erro GPS ou permissão negada")
+  );
+}
+
+/* TesteS */
+async function testeS() {
+  const resultado = document.getElementById("resultado");
+
+  try {
+    const resposta = await fetch("https://teuservidor.com/ping");
+
+    if (resposta.ok) {
+      resultado.innerText = "Servidor está online ✅";
+      document.getElementById("one").value = "Servidor online";
+    } else {
+      resultado.innerText = "Servidor respondeu mas com erro ⚠️";
+      document.getElementById("one").value = "Servidor respondeu mas com erro";
+    }
+
+  } catch (erro) {
+    resultado.innerText = "Servidor offline ❌";
+    console.log(erro);
+  }
+
+   //document.getElementById("one").value = "___";
+
+}
+
+async function f_change() {
+   document.getElementById("one").value = "Servidor online";
+}
+
+</script>
+
+</body>
+</html>
